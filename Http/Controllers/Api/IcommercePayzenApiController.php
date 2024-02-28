@@ -187,41 +187,41 @@ class IcommercePayzenApiController extends BaseApiController
           // Check signatures
           if ($x_signature == $data['signature']) {
             $newStatusOrder =  $this->payzenService->getStatusOrder($data['vads_trans_status']);
+
+            // Update Transaction
+            $transactionUp = $this->validateResponseApi(
+              $this->transactionController->update($inforReference['transactionId'],new Request(
+                  [
+                      'payment_method_id' => $this->paymentMethod->id,
+                      'amount' => $order->total,
+                      'status' => $newStatusOrder,
+                      'external_status' => $transactionState,
+                      'external_code' => $codTransactionState
+                  ]
+              ))
+            );
+            //\Log::info($this->log.'Transaction External Status: '.$transactionUp->external_status);
+            
+            // Update Order Process
+            $orderUP = $this->validateResponseApi(
+              $this->orderController->update($order->id, new Request(
+                [
+                  "attributes" => [
+                    'order_id' => $order->id,
+                    'status_id' => $newStatusOrder
+                  ]
+                ]
+              ))
+            );
+
           }else{
-            $codTransactionState = "Error - Sign";
-            \Log::info($this->log.'ERROR en FIRMA');
+            throw new \Exception("ERROR - SIGNATURE", 401); //401 Unauthorized
           }
 
-          // Update Transaction
-          $transactionUp = $this->validateResponseApi(
-            $this->transactionController->update($inforReference['transactionId'],new Request(
-                 [
-                    'payment_method_id' => $this->paymentMethod->id,
-                    'amount' => $order->total,
-                    'status' => $newStatusOrder,
-                    'external_status' => $transactionState,
-                    'external_code' => $codTransactionState
-                ]
-            ))
-          );
-          //\Log::info($this->log.'Transaction External Status: '.$transactionUp->external_status);
-          
-          // Update Order Process
-          $orderUP = $this->validateResponseApi(
-            $this->orderController->update($order->id, new Request(
-              [
-                "attributes" => [
-                  'order_id' => $order->id,
-                  'status_id' => $newStatusOrder
-                ]
-              ]
-            ))
-          );
-         
         }
 
       }else{
-        \Log::info($this->log . 'Vads Hash not exist');
+        throw new \Exception("WARNING - Vads Hash not exist", 401);
       }
 
       \Log::info($this->log . 'Confirmation - END');
