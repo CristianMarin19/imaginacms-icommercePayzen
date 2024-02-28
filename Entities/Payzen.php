@@ -6,16 +6,27 @@ class Payzen
 {
 
 	public $urlAction; 
-  public $currency;
-  public $amount;
-  public $mode;
+  public $vadsCurrency;
+  public $vadsAmount;
+  public $vadsCtxMode;
   public $vadsActionMode;
   public $vadsPageAction;
   public $vadsPaymentConfig;
   public $vadsSiteId;
   public $vadsTransDate;
   public $vadsTransId;
+
+  public $vadsOrderId;
+  public $vadsOrderInfo;
+
   public $vadsVersion;
+  public $vadsUrlReturn;
+  public $vadsReturnMode;
+
+  public $vadsCustEmail;
+  public $vadsCustFirstName;
+  public $vadsCustLastName;
+
   public $signature;
   	
   private $_htmlFormCode;
@@ -31,8 +42,8 @@ class Payzen
   }
 
  
-  public function setCurrency($currency){
-    $this->currency = $currency;
+  public function setCurrency($vadsCurrency){
+    $this->vadsCurrency = $vadsCurrency;
   }
 
   public function setVadsSiteId($vadsSiteId){
@@ -48,20 +59,24 @@ class Payzen
   }
 
   //Amount in Cents
-  public function setAmount($amount){
-  	   $this->amount = $amount * 100;
+  public function setAmount($vadsAmount){
+  	   $this->vadsAmount = $vadsAmount * 100;
   }
   
-  public function setRedirectUrl($redirectUrl){
-  	   $this->redirectUrl =$redirectUrl;
+  public function setVadsUrlReturn($vadsUrlReturn){
+  	   $this->vadsUrlReturn= $vadsUrlReturn;
+  }
+
+  public function setVadsReturnMode($vadsReturnMode="GET"){
+    $this->vadsReturnMode = $vadsReturnMode;
   }
 
   public function setSignature($signature){
     $this->signature = $signature;
   }
 
-  public function setMode($mode){
-    $this->mode = $mode;
+  public function setMode($vadsCtxMode){
+    $this->vadsCtxMode = strtoupper($vadsCtxMode);
   }
 
   public function setVadsActionMode($vadsActionMode){
@@ -78,6 +93,26 @@ class Payzen
  
   public function setVadsVersion($vadsVersion){
     $this->vadsVersion = $vadsVersion;
+  }
+
+  public function setVadsOrderId($reference){
+    $this->vadsOrderId = $reference;
+  }
+
+  public function setVadsOrderInfo($info){
+    $this->vadsOrderInfo = trans("icommerce::cms.orderDate").": ".$info;
+  }
+
+  public function setVadsCustEmail($email){
+    $this->vadsCustEmail = $email;
+  }
+
+  public function setVadsCustFirstName($firstName){
+    $this->vadsCustFirstName = $firstName;
+  }
+
+  public function setVadsCustLastName($lastName){
+    $this->vadsCustLastName = $lastName;
   }
 
   /**
@@ -102,15 +137,26 @@ class Payzen
   public function _makeFields(){
   
     $this->_htmlFormCode.=$this->_addInput('vads_action_mode',$this->vadsActionMode);
-    $this->_htmlFormCode.=$this->_addInput('vads_amount',$this->amount);
-    $this->_htmlFormCode.=$this->_addInput('vads_ctx_mode',$this->mode);
-    $this->_htmlFormCode.=$this->_addInput('vads_currency',$this->currency);
+    $this->_htmlFormCode.=$this->_addInput('vads_amount',$this->vadsAmount);
+    $this->_htmlFormCode.=$this->_addInput('vads_ctx_mode',$this->vadsCtxMode);
+    $this->_htmlFormCode.=$this->_addInput('vads_currency',$this->vadsCurrency);
     $this->_htmlFormCode.=$this->_addInput('vads_page_action',$this->vadsPageAction);
     $this->_htmlFormCode.=$this->_addInput('vads_payment_config',$this->vadsPaymentConfig);
     $this->_htmlFormCode.=$this->_addInput('vads_site_id',$this->vadsSiteId);
     $this->_htmlFormCode.=$this->_addInput('vads_trans_date',$this->vadsTransDate);
     $this->_htmlFormCode.=$this->_addInput('vads_trans_id',$this->vadsTransId);
     $this->_htmlFormCode.=$this->_addInput('vads_version',$this->vadsVersion);
+
+    $this->_htmlFormCode.=$this->_addInput('vads_order_id',$this->vadsOrderId);
+    $this->_htmlFormCode.=$this->_addInput('vads_order_info',$this->vadsOrderInfo);
+
+    $this->_htmlFormCode.=$this->_addInput('vads_return_mode',$this->vadsReturnMode);
+    $this->_htmlFormCode.=$this->_addInput('vads_url_return',$this->vadsUrlReturn);
+
+    $this->_htmlFormCode.=$this->_addInput('vads_cust_email',$this->vadsCustEmail);
+    $this->_htmlFormCode.=$this->_addInput('vads_cust_first_name',$this->vadsCustFirstName);
+    $this->_htmlFormCode.=$this->_addInput('vads_cust_last_name',$this->vadsCustLastName);
+    
     $this->_htmlFormCode.=$this->_addInput('signature',$this->signature);
 
   }
@@ -145,7 +191,7 @@ class Payzen
   * Execute Redirection
   */
   public function executeRedirection()
-  {
+  { 
     echo $this->renderPaymentForm();
     echo '<script>document.forms["'.$this->nameForm.'"].submit();</script>';
   }

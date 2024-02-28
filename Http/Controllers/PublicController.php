@@ -40,7 +40,8 @@ class PublicController extends BasePublicController
      * @param Requests request
      * @return route
      */
-    public function index($eURL){
+    public function index($eURL)
+    {
 
         try {
 
@@ -72,6 +73,45 @@ class PublicController extends BasePublicController
 
         }
        
+
+    }
+
+    /**
+    * Response Frontend After the Payment
+    * @param  $request 
+    * @param  $orderId
+    * @return redirect
+    */
+    public function response(Request $request,$orderId)
+    {
+
+        $isQuasarAPP = env("QUASAR_APP", false);
+
+        //Get all data from request
+        $data = $request->all();
+
+        if(isset($data['vads_order_id'])){
+
+            $order = $this->order->find($orderId);
+            if(!$isQuasarAPP){
+                if (!empty($order))
+                    return redirect($order->url);
+                else
+                    return redirect()->route('home');
+
+            }else{
+                return view('icommerce::frontend.orders.closeWindow');
+            }
+
+        }else{
+
+          if(!$isQuasarAPP){
+            return redirect()->route('homepage');
+          }else{
+            return view('icommerce::frontend.orders.closeWindow');
+          }
+
+        }
 
     }
 

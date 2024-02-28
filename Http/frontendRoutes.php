@@ -8,6 +8,11 @@ $router->group(['prefix'=>'icommercepayzen'],function (Router $router){
         'as' => 'icommercepayzen',
         'uses' => 'PublicController@index',
     ]);
+
+    $router->get('/payment/response/{orderId}', [
+        'as' => 'icommercepayzen.response',
+        'uses' => 'PublicController@response',
+    ]);
   
        
 });

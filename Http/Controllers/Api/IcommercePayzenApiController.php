@@ -104,6 +104,7 @@ class IcommercePayzenApiController extends BaseApiController
         throw new \Exception(trans("icommercepayzen::icommercepayzens.messages.minimum") . " :" . $this->paymentMethod->options->minimunAmount, 204);
 
       // Create Transaction
+      /*
       $transaction = $this->validateResponseApi(
         $this->transactionController->create(new Request(["attributes" => [
           'order_id' => $order->id,
@@ -112,6 +113,14 @@ class IcommercePayzenApiController extends BaseApiController
           'status' => $statusOrder
         ]]))
       );
+      */
+      // Create Transaction
+      $transaction = $this->transaction->create([
+        'order_id' => $order->id,
+        'payment_method_id' => $this->paymentMethod->id,
+        'amount' => $order->total,
+        'status' => $statusOrder
+      ]);
 
       // Encri
       $eUrl = paymentezEncriptUrl($order->id, $transaction->id);
@@ -144,68 +153,60 @@ class IcommercePayzenApiController extends BaseApiController
   {
 
     \Log::info($this->log . 'Confirmation|INIT|' . time());
-    $response = ['msj' => "Proceso Valido"];
+    $response = ['msj' => "OK"];
 
     try {
 
-      dd("YA VAAA");
-
       $data = $request->all();
+      //\Log::info($this->log . 'Confirmation|DATA: '.json_encode($data));
 
-      if (isset($data['vads_hash'])) {
-
-        //$dataTransaction = $request->data['transaction'];
-        //\Log::info('Module Icommercewompi: Transaction: '.json_encode($dataTransaction))
+      if (isset($data['vads_hash'])){
 
         // Get order id and transaction id from request
-        //$inforReference = icommercewompi_getInforRefCommerce($dataTransaction['reference']);
+        $inforReference = $this->payzenService->getInforRefCommerce($data['vads_order_id']);
 
-        //$order = $this->order->find($inforReference['orderId']);
-        //\Log::info('Module Icommercewompi: Order Status Id: '.$order->status_id);
+        $order = $this->order->find($inforReference['orderId']);
+        \Log::info($this->log.'Order StatusId: '.$order->status_id);
 
-        // Status Order 'pending'
-        if ($order->status_id == 1) {
+        // Status Order 'pending', 'confirming payment'
+        if ($order->status_id == 1 || $order->status_id == 11) {
 
           // Default Status Order
-          //$newStatusOrder = 7; // Status Order Failed
+          $newStatusOrder = 7; // Status Order Failed
+
+          //Permitirá identificar de manera única la transacción.
+          $codTransactionState = $data['vads_trans_uuid'] ?? null;
 
           // Get States From Commerce
-          //$codTransactionState = "";
-          //$transactionState = $dataTransaction['status'];
+          $transactionState = $data['vads_trans_status']; 
+          \Log::info($this->log.'VasdTransStatus: '.$transactionState);
 
-          // Get Signatures - OJO AQUI TOCA VER SI LLEGA LA KEY
-          //$payzen = $this->payzenService->makeSignature(null,$lakeyyyy,$data);
+          // Get Signatures
+          $x_signature = $this->payzenService->makeSignature($data,$this->paymentMethod->options->signatureKey);
 
           // Check signatures
-          /*
-            if ($x_signature == $signature) {
-                $newStatusOrder =  $payzenService->getStatusOrder($data['vads_trans_status']);
-            }else{
-              $codTransactionState = "Error - Sign";
-              \Log::info('Module Icommercewompi: **ERROR** en Firma');
-            }
-            */
+          if ($x_signature == $data['signature']) {
+            $newStatusOrder =  $this->payzenService->getStatusOrder($data['vads_trans_status']);
+          }else{
+            $codTransactionState = "Error - Sign";
+            \Log::info($this->log.'ERROR en FIRMA');
+          }
 
           // Update Transaction
-          /*
-          $transaction = $this->validateResponseApi(
-            $this->transactionController->update($inforReference['transactionId'], new Request(
-              [
-                "attributes" => [
-                  'order_id' => $order->id,
-                  'payment_method_id' => $this->paymentMethod->id,
-                  'amount' => $order->total,
-                  'status' => $newStatusOrder,
-                  'external_status' => $transactionState,
-                  'external_code' => $codTransactionState
+          $transactionUp = $this->validateResponseApi(
+            $this->transactionController->update($inforReference['transactionId'],new Request(
+                 [
+                    'payment_method_id' => $this->paymentMethod->id,
+                    'amount' => $order->total,
+                    'status' => $newStatusOrder,
+                    'external_status' => $transactionState,
+                    'external_code' => $codTransactionState
                 ]
-              ]
             ))
           );
-          */
-
+          //\Log::info($this->log.'Transaction External Status: '.$transactionUp->external_status);
+          
           // Update Order Process
-          /*
           $orderUP = $this->validateResponseApi(
             $this->orderController->update($order->id, new Request(
               [
@@ -216,16 +217,18 @@ class IcommercePayzenApiController extends BaseApiController
               ]
             ))
           );
-          */
-
+         
         }
+
+      }else{
+        \Log::info($this->log . 'Vads Hash not exist');
       }
 
       \Log::info($this->log . 'Confirmation - END');
       
     } catch (\Exception $e) {
       \Log::error($this->log . 'Message: ' . $e->getMessage());
-      \Log::error($his->log . 'Code: ' . $e->getCode());
+      \Log::error($this->log . 'Code: ' . $e->getCode());
     }
 
 

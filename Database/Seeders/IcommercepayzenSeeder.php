@@ -54,7 +54,7 @@ class IcommercepayzenSeeder extends Seeder
 
         }else{
 
-            $this->command->alert("This method has already been installed !!");
+            //$this->command->alert("This method has already been installed !!");
 
         }
    
