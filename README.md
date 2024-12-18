@@ -2,7 +2,7 @@
 
 ## Install
 ```bash
-composer require imagina/icommercepayzen-module=v8.x-dev
+composer require imagina/icommercepayzen-module=v10.x-dev
 ```
 
 ## Enable the module
