@@ -16,8 +16,6 @@ class IcommercepayzenSeeder extends Seeder
    */
   public function run()
   {
-
-
 //    Model::unguard();
 
     if (!is_module_enabled('Icommercepayzen')) {

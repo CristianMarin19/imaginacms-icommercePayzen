@@ -3,7 +3,7 @@
 return [
   'single' => 'Payzen',
   'description' => 'The description module',
-  'iaDescription' => 'Online payment platform that allows merchants to process payments securely and efficiently. It offers various options for making transactions, including credit cards, debit cards and other payment methods. Their system is designed to meet the highest security standards, using technologies such as encryption and two-factor authentication.',
+  'iaDescription' => 'PayZen allows you to pay quickly, securely and easily using your credit, debit, PSE card or digital methods such as Nequi and Daviplata.',
   'list resource' => 'List icommercepayzens',
   'create resource' => 'Create icommercepayzens',
   'edit resource' => 'Edit icommercepayzens',
